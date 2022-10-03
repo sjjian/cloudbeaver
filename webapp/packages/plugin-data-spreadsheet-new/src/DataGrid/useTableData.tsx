@@ -8,7 +8,6 @@
 
 import { computed, observable } from 'mobx';
 
-
 import { useObservableRef } from '@cloudbeaver/core-blocks';
 import { TextTools } from '@cloudbeaver/core-utils';
 import {
@@ -16,12 +15,14 @@ import {
   ResultSetConstraintAction, ResultSetDataAction, ResultSetDataKeysUtils,
   ResultSetEditAction, ResultSetFormatAction, ResultSetViewAction
 } from '@cloudbeaver/plugin-data-viewer';
-import type { Column } from '@cloudbeaver/plugin-react-data-grid';
+import type { Column, HeaderRendererProps } from '@cloudbeaver/plugin-react-data-grid';
 
 import { IndexFormatter } from './Formatters/IndexFormatter';
 import { TableColumnHeader } from './TableColumnHeader/TableColumnHeader';
 import { TableIndexColumnHeader } from './TableColumnHeader/TableIndexColumnHeader';
 import type { ITableData } from './TableDataContext';
+
+const headerRenderer = (props: HeaderRendererProps<any>) => <TableColumnHeader {...props} />;
 
 export const indexColumn: Column<IResultSetRowKey, any> = {
   key: 'index',
@@ -32,8 +33,8 @@ export const indexColumn: Column<IResultSetRowKey, any> = {
   selectable: false,
   resizable: false,
   frozen: true,
-  headerRenderer: TableIndexColumnHeader,
-  formatter: IndexFormatter,
+  headerRenderer: props => <TableIndexColumnHeader {...props} />,
+  formatter: props => <IndexFormatter {...props} />,
 };
 
 export function useTableData(
@@ -85,7 +86,7 @@ export function useTableData(
           name: this.getColumnInfo(col)?.label || '?',
           editable: true,
           width: Math.min(300, measuredCells[index]),
-          headerRenderer: TableColumnHeader,
+          headerRenderer,
           editorOptions: {
             onCellKeyDown,
           },

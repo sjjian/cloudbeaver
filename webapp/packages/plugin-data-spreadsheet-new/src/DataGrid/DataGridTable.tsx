@@ -15,13 +15,14 @@ import { useService } from '@cloudbeaver/core-di';
 import { EventContext, EventStopPropagationFlag } from '@cloudbeaver/core-events';
 import { Executor } from '@cloudbeaver/core-executor';
 import { useTranslate } from '@cloudbeaver/core-localization';
-import { useStyles } from '@cloudbeaver/core-theming';
+import { ThemeService, useStyles } from '@cloudbeaver/core-theming';
 import { ClipboardService } from '@cloudbeaver/core-ui';
 import {
   DatabaseDataSelectActionsData, DatabaseEditChangeType, IDatabaseResultSet, IDataPresentationProps,
-  IResultSetEditActionData, IResultSetElementKey, IResultSetPartialKey, ResultSetDataKeysUtils, ResultSetSelectAction
+  IResultSetEditActionData, IResultSetElementKey, IResultSetPartialKey, IResultSetRowKey,
+  ResultSetDataKeysUtils, ResultSetSelectAction
 } from '@cloudbeaver/plugin-data-viewer';
-import type { DataGridHandle, Position } from '@cloudbeaver/plugin-react-data-grid';
+import type { CellRendererProps, DataGridHandle, FormatterProps, Position } from '@cloudbeaver/plugin-react-data-grid';
 import DataGrid from '@cloudbeaver/plugin-react-data-grid';
 
 import { CellPosition, EditingContext } from '../Editing/EditingContext';
@@ -48,13 +49,18 @@ function isAtBottom(event: React.UIEvent<HTMLDivElement>): boolean {
   return target.clientHeight + target.scrollTop + 100 > target.scrollHeight;
 }
 
+const cellRenderer = (key: React.Key, props: CellRendererProps<IResultSetRowKey, any>) => <CellRenderer {...props} />;
+const cellFormatter = (props: FormatterProps<IResultSetRowKey, any>) => <CellFormatter {...props} />;
+
 const rowHeight = 25;
 const headerHeight = 28;
 
 export const DataGridTable = observer<IDataPresentationProps<any, IDatabaseResultSet>>(function DataGridTable({ model, actions, resultIndex, className }) {
   const translate = useTranslate();
 
+  const themeService = useService(ThemeService);
   const clipboardService = useService(ClipboardService);
+
   const gridContainerRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const dataGridDivRef = useRef<HTMLDivElement | null>(null);
@@ -423,19 +429,19 @@ export const DataGridTable = observer<IDataPresentationProps<any, IDatabaseResul
             >
               <DataGrid
                 ref={dataGridRef}
-                className={`cb-react-grid-theme ${className}`}
+                className={`cb-react-grid-theme rdg-${themeService.currentThemeId} ${className}`}
                 columns={tableData.columns}
                 defaultColumnOptions={{
                   minWidth: 50,
                   resizable: true,
-                  formatter: CellFormatter,
+                  formatter: cellFormatter,
                 }}
                 rows={tableData.rows}
                 rowKeyGetter={ResultSetDataKeysUtils.serialize}
                 headerRowHeight={headerHeight}
                 rowHeight={rowHeight}
-                components={{
-                  cellRenderer: CellRenderer,
+                renderers={{
+                  cellRenderer,
                 }}
                 onSelectedCellChange={handleFocusChange}
                 onColumnResize={(idx, width) => columnResize.execute({ column: idx, width })}
