@@ -49,38 +49,40 @@ export const tableFooterMenuStyles = css`
 export const TableFooterMenuItem = observer<Props>(function TableFooterMenuItem({ menuItem, ...props }) {
   const translate = useTranslate();
 
-  if (!menuItem.panel) {
+  const { isHidden, tooltip, isDisabled, onClick, title, panel, icon } = menuItem;
+
+  if (!panel) {
     return styled(tableFooterMenuStyles)(
       <ToolsAction
         {...props}
-        {...use({ hidden: menuItem.isHidden })}
-        title={translate(menuItem.tooltip)}
+        {...use({ isHidden })}
+        title={translate(tooltip)}
         icon={menuItem.icon}
         viewBox="0 0 32 32"
-        disabled={menuItem.isDisabled}
-        onClick={() => menuItem.onClick?.()}
+        disabled={isDisabled}
+        onClick={() => onClick?.()}
       >
-        {translate(menuItem.title)}
-      </ToolsAction>,
+        {translate(title)}
+      </ToolsAction>
     );
   }
 
   return styled(tableFooterMenuStyles)(
     <MenuTrigger
       {...props}
-      {...use({ hidden: menuItem.isHidden })}
-      title={translate(menuItem.tooltip)}
-      panel={menuItem.panel}
-      disabled={menuItem.isDisabled}
+      {...use({ hidden: isHidden })}
+      title={translate(tooltip)}
+      panel={panel}
+      disabled={isDisabled}
       style={[tableFooterMenuStyles]}
       modal
     >
-      {menuItem.icon && (
+      {icon && (
         <menu-trigger-icon>
-          <IconOrImage icon={menuItem.icon} viewBox="0 0 32 32" />
+          <IconOrImage icon={icon} viewBox="0 0 32 32" />
         </menu-trigger-icon>
       )}
-      {menuItem.title && <menu-trigger-title>{translate(menuItem.title)}</menu-trigger-title>}
+      {title && <menu-trigger-title>{translate(title)}</menu-trigger-title>}
     </MenuTrigger>,
   );
 });
