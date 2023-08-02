@@ -6,6 +6,7 @@
  * you may not use this file except in compliance with the License.
  */
 import { Bootstrap, injectable } from '@cloudbeaver/core-di';
+import { CommonDialogService, ConfirmationDialog } from '@cloudbeaver/core-dialogs';
 import { ResultDataFormat } from '@cloudbeaver/core-sdk';
 import { ActionService, DATA_CONTEXT_MENU, MenuService } from '@cloudbeaver/core-view';
 import {
@@ -20,8 +21,10 @@ import {
 } from '@cloudbeaver/plugin-data-viewer';
 
 import { ACTION_DATA_VIEWER_GROUPING_CLEAR } from './Actions/ACTION_DATA_VIEWER_GROUPING_CLEAR';
+import { ACTION_DATA_VIEWER_GROUPING_EDIT_COLUMNS } from './Actions/ACTION_DATA_VIEWER_GROUPING_EDIT_COLUMNS';
 import { ACTION_DATA_VIEWER_GROUPING_REMOVE_COLUMN } from './Actions/ACTION_DATA_VIEWER_GROUPING_REMOVE_COLUMN';
 import { DATA_CONTEXT_DV_DDM_RS_GROUPING } from './DataContext/DATA_CONTEXT_DV_DDM_RS_GROUPING';
+import { DVGroupingColumnEditorDialog } from './DVGroupingColumnEditorDialog/DVGroupingColumnEditorDialog';
 import { DVResultSetGroupingPresentation } from './DVResultSetGroupingPresentation';
 
 @injectable()
@@ -30,6 +33,7 @@ export class DVResultSetGroupingPluginBootstrap extends Bootstrap {
     private readonly dataPresentationService: DataPresentationService,
     private readonly menuService: MenuService,
     private readonly actionService: ActionService,
+    private readonly commonDialogService: CommonDialogService,
   ) {
     super();
   }
@@ -51,7 +55,9 @@ export class DVResultSetGroupingPluginBootstrap extends Bootstrap {
           return false;
         }
 
-        return [ACTION_DATA_VIEWER_GROUPING_CLEAR, ACTION_DATA_VIEWER_GROUPING_REMOVE_COLUMN].includes(action);
+        return [ACTION_DATA_VIEWER_GROUPING_CLEAR, ACTION_DATA_VIEWER_GROUPING_REMOVE_COLUMN, ACTION_DATA_VIEWER_GROUPING_EDIT_COLUMNS].includes(
+          action,
+        );
       },
       isDisabled(context, action) {
         const grouping = context.get(DATA_CONTEXT_DV_DDM_RS_GROUPING);
@@ -82,7 +88,7 @@ export class DVResultSetGroupingPluginBootstrap extends Bootstrap {
 
         return false;
       },
-      handler: (context, action) => {
+      handler: async (context, action) => {
         const grouping = context.get(DATA_CONTEXT_DV_DDM_RS_GROUPING);
         const model = context.get(DATA_CONTEXT_DV_DDM);
         const resultIndex = context.get(DATA_CONTEXT_DV_DDM_RESULT_INDEX);
@@ -106,7 +112,14 @@ export class DVResultSetGroupingPluginBootstrap extends Bootstrap {
             });
 
             grouping.removeColumn(...columnsToRemove);
+            break;
           }
+          case ACTION_DATA_VIEWER_GROUPING_EDIT_COLUMNS:
+            await this.commonDialogService.open(DVGroupingColumnEditorDialog, {
+              node: {
+                id: '1',
+              },
+            });
         }
       },
     });
@@ -116,7 +129,7 @@ export class DVResultSetGroupingPluginBootstrap extends Bootstrap {
         return context.has(DATA_CONTEXT_DV_DDM_RS_GROUPING);
       },
       getItems(context, items) {
-        return [...items, ACTION_DATA_VIEWER_GROUPING_REMOVE_COLUMN, ACTION_DATA_VIEWER_GROUPING_CLEAR];
+        return [...items, ACTION_DATA_VIEWER_GROUPING_REMOVE_COLUMN, ACTION_DATA_VIEWER_GROUPING_CLEAR, ACTION_DATA_VIEWER_GROUPING_EDIT_COLUMNS];
       },
     });
   }

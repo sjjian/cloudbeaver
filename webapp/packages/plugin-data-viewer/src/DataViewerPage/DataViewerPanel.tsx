@@ -26,6 +26,7 @@ const styles = css`
 export const DataViewerPanel: ObjectPagePanelComponent<IDataViewerPageState> = observer(function DataViewerPanel({ tab, page }) {
   const dataViewerDatabaseDataModel = useDataViewerDatabaseDataModel(tab);
   const pageState = page.getState(tab);
+  console.log('dataViewerPanel.tsx');
 
   const handlePresentationChange = useCallback(
     (presentationId: string) => {

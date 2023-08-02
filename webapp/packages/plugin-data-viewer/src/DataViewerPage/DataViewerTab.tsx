@@ -19,6 +19,7 @@ import type { IDataViewerPageState } from '../IDataViewerPageState';
 export const DataViewerTab: ObjectPageTabComponent<IDataViewerPageState> = observer(function DataViewerTab({ tab, page, onSelect, style }) {
   const styles = useStyles(style);
   const navNodeManagerService = useService(NavNodeManagerService);
+  console.log('DataViewerTab.tsx');
 
   if (!navNodeManagerService.isNodeHasData(tab.handlerState.objectId)) {
     return null;

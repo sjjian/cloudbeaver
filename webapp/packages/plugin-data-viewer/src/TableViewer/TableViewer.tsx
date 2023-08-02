@@ -128,6 +128,18 @@ export const TableViewer = observer<Props, HTMLDivElement>(
     const loading = dataModel?.isLoading() ?? true;
     const dataFormat = result?.dataFormat || ResultDataFormat.Resultset;
     const splitState = useSplitUserState('table-viewer');
+    console.log('--> table viewer');
+    console.log('tableId', tableId);
+    console.log('resultIndex', resultIndex);
+    console.log('presentationId', presentationId);
+    console.log('valuePresentationId', valuePresentationId);
+    console.log('simple', simple);
+    console.log('context', context);
+    console.log('className', className);
+    console.log('onPresentationChange', onPresentationChange);
+    console.log('onValuePresentationChange', onValuePresentationChange);
+    console.log('<-- table viewer');
+    
 
     const localActions = useObjectRef({
       clearConstraints() {
