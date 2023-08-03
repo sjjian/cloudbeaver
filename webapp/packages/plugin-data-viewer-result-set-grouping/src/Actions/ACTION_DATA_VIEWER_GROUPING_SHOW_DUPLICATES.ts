@@ -7,8 +7,8 @@
  */
 import { createAction } from '@cloudbeaver/core-view';
 
-export const ACTION_DATA_VIEWER_GROUPING_CLEAR = createAction('data-viewer-grouping-clear', {
-  label: 'ui_clear',
-  tooltip: 'ui_clear',
-  icon: 'erase',
+export const ACTION_DATA_VIEWER_GROUPING_SHOW_DUPLICATES = createAction('data-viewer-grouping-show-duplicates', {
+  label: 'plugin-data-viewer-result-set-grouping_action_show_duplicates',
+  tooltip: 'plugin-data-viewer-result-set-grouping_action_show_duplicates',
+  icon: '/icons/plugin_data_viewer_result_set_grouping_show_duplicates.svg',
 });

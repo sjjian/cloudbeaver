@@ -35,6 +35,7 @@ export function useGroupingDnDColumns(
     columnKey: IResultSetColumnKey | null,
     outside: boolean,
   ) {
+    console.log('--> useGroupingDnDColumns.ts: dropItem model', model);
     if (!columnKey) {
       return;
     }

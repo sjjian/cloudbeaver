@@ -5,26 +5,20 @@
  * Licensed under the Apache License, Version 2.0.
  * you may not use this file except in compliance with the License.
  */
-import { action } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { useContext, useState } from 'react';
 import styled, { css, use } from 'reshadow';
 
-import { useObservableRef, useTranslate } from '@cloudbeaver/core-blocks';
+import { useTranslate } from '@cloudbeaver/core-blocks';
 import { useTabLocalState } from '@cloudbeaver/core-ui';
 import { CaptureViewContext, useDataContext } from '@cloudbeaver/core-view';
-import {
-  DataPresentationComponent,
-  IDatabaseResultSet,
-  TableViewerLoader,
-  TableViewerStorageService
-} from '@cloudbeaver/plugin-data-viewer';
+import { DataPresentationComponent, IDatabaseResultSet, TableViewerLoader } from '@cloudbeaver/plugin-data-viewer';
 
-import { DATA_CONTEXT_DV_DDM_RS_GROUPING, IResultSetGroupingData } from './DataContext/DATA_CONTEXT_DV_DDM_RS_GROUPING';
+import { DATA_CONTEXT_DV_DDM_RS_GROUPING } from './DataContext/DATA_CONTEXT_DV_DDM_RS_GROUPING';
 import type { IGroupingQueryState } from './IGroupingQueryState';
+import { useGroupingData } from './useGroupingData';
 import { useGroupingDataModel } from './useGroupingDataModel';
 import { useGroupingDnDColumns } from './useGroupingDnDColumns';
-import { useService } from '@cloudbeaver/core-di';
 
 const DEFAULT_GROUPING_QUERY_OPERATION = 'COUNT(*)';
 
@@ -97,13 +91,8 @@ const styles = css`
   }
 `;
 
-interface IPrivateGroupingData extends IResultSetGroupingData {
-  state: IDVResultSetGroupingPresentationState;
-}
-
-interface IDVResultSetGroupingPresentationState extends IGroupingQueryState {
+export interface IDVResultSetGroupingPresentationState extends IGroupingQueryState {
   presentationId: string;
-  functions: string[];
 }
 
 export const DVResultSetGroupingPresentation: DataPresentationComponent<any, IDatabaseResultSet> = observer(function DVResultSetGroupingPresentation({
@@ -114,6 +103,7 @@ export const DVResultSetGroupingPresentation: DataPresentationComponent<any, IDa
     presentationId: '',
     columns: [],
     functions: [DEFAULT_GROUPING_QUERY_OPERATION],
+    showDuplicatesOnly: false,
   }));
 
   const viewContext = useContext(CaptureViewContext);
@@ -124,39 +114,9 @@ export const DVResultSetGroupingPresentation: DataPresentationComponent<any, IDa
   const model = useGroupingDataModel(originalModel, resultIndex, state);
   const dnd = useGroupingDnDColumns(state, originalModel, model);
 
-  const dataViewerTableService = useService(TableViewerStorageService);
-  console.log('--> mod', dataViewerTableService.get(model.model.id));
+  const grouping = useGroupingData(state);
 
-  console.log('context', context?.map.entries());
-  console.log('presentationId', presentationId);
-  console.log('valuePresentationId', valuePresentationId);
-  console.log('model', model);
-  console.log('dnd', dnd);
-  console.log('-- >state', state);
-
-  const groupingData = useObservableRef<IPrivateGroupingData>(
-    () => ({
-      getColumns() {
-        return this.state.columns;
-      },
-      removeColumn(...columns) {
-        this.state.columns = this.state.columns.filter(column => !columns.includes(column));
-      },
-      clear() {
-        this.state.presentationId = '';
-        this.state.columns = [];
-      },
-      getFunctions() {
-        return this.state.functions;
-      },
-    }),
-    {
-      clear: action,
-    },
-    { state },
-  );
-
-  context.set(DATA_CONTEXT_DV_DDM_RS_GROUPING, groupingData);
+  context.set(DATA_CONTEXT_DV_DDM_RS_GROUPING, grouping);
 
   return styled(styles)(
     <>

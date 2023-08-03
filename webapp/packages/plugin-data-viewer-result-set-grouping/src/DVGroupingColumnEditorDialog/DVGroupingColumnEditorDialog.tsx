@@ -15,19 +15,17 @@
  * from DBeaver Corp.
  */
 import { observer } from 'mobx-react-lite';
+import { useState } from 'react';
 
-import { Button, Group, Loader, s, useAutoLoad, useS, useTranslate } from '@cloudbeaver/core-blocks';
-import { useService } from '@cloudbeaver/core-di';
+import { Button, Group, s, useS, useTranslate } from '@cloudbeaver/core-blocks';
 import { CommonDialogBody, CommonDialogFooter, CommonDialogHeader, CommonDialogWrapper, DialogComponentProps } from '@cloudbeaver/core-dialogs';
-import { NotificationService } from '@cloudbeaver/core-events';
-import { type NavNode, NavTreeResource } from '@cloudbeaver/core-navigation-tree';
 
-import { FiltersTable } from './FiltersTable';
+import type { IResultSetGroupingData } from '../DataContext/DATA_CONTEXT_DV_DDM_RS_GROUPING';
 import styles from './DVGroupingColumnEditorDialog.m.css';
-import { useFilters } from './useFilters';
+import { GroupingColumnEditorTable } from './GroupingColumnEditorTable';
 
 interface Payload {
-  node: NavNode;
+  grouping: IResultSetGroupingData;
 }
 
 export const DVGroupingColumnEditorDialog = observer<DialogComponentProps<Payload>>(function DVGroupingColumnEditorDialog({
@@ -35,53 +33,75 @@ export const DVGroupingColumnEditorDialog = observer<DialogComponentProps<Payloa
   resolveDialog,
   payload,
 }) {
+  const { grouping } = payload;
   const translate = useTranslate();
   const style = useS(styles);
-  const notificationService = useService(NotificationService);
-  const navTreeResource = useService(NavTreeResource);
-  const state = useFilters(payload.node.id);
 
-  useAutoLoad(state);
+  const [columns, setColumns] = useState([...grouping.getColumns()]);
+  const [functions, setFunctions] = useState([...grouping.getFunctions()]);
+
+  const onAddColumn = (name: string) => {
+    if (!name) {
+      return;
+    }
+    setColumns([...columns, name]);
+  };
+
+  const onAddFunction = (name: string) => {
+    if (!name) {
+      return;
+    }
+    setFunctions([...functions, name]);
+  };
+
+  const onDeleteColumn = (name: string) => {
+    setColumns(columns.filter(column => column !== name));
+  };
+
+  const onDeleteFunction = (name: string) => {
+    setFunctions(functions.filter(column => column !== name));
+  };
+
+  const onColumnChange = (name: string, index: number) => {
+    const newColumns = [...columns];
+    newColumns[index] = name;
+    setColumns(newColumns);
+  };
+
+  const onFunctionChange = (name: string, index: number) => {
+    const newFunctions = [...functions];
+    newFunctions[index] = name;
+    setFunctions(newFunctions);
+  };
 
   async function submit() {
-    try {
-      await navTreeResource.setFilter(payload.node.id, state.filters.include, state.filters.exclude);
-      resolveDialog();
-    } catch (exception: any) {
-      notificationService.logException(exception, 'plugin_navigation_tree_filters_submit_fail');
-    }
+    grouping.setColumns(columns);
+    grouping.setFunctions(functions);
+    resolveDialog();
   }
 
   return (
-    <CommonDialogWrapper size="large">
-      <CommonDialogHeader
-        title={translate('plugin_navigation_tree_filters_configuration', undefined, { name: payload.node.name })}
-        icon="filter"
-        onReject={rejectDialog}
-      />
-      <CommonDialogBody noOverflow noBodyPadding>
-        <Loader state={state}>
-          <Group box>
-            <div className={s(style, { tablesContainer: true })}>
-              <div className={s(style, { tableContainer: true })}>
-                <FiltersTable
-                  title={translate('plugin_navigation_tree_filters_include')}
-                  filters={state.filters.include}
-                  onAdd={state.include}
-                  onDelete={state.deleteInclude}
-                />
-              </div>
-              <div className={s(style, { tableContainer: true })}>
-                <FiltersTable
-                  title={translate('plugin_navigation_tree_filters_exclude')}
-                  filters={state.filters.exclude}
-                  onAdd={state.exclude}
-                  onDelete={state.deleteExclude}
-                />
-              </div>
-            </div>
-          </Group>
-        </Loader>
+    <CommonDialogWrapper size="medium">
+      <CommonDialogHeader title="Grouping configuration" onReject={rejectDialog} />
+      <CommonDialogBody noBodyPadding>
+        <Group box>
+          <div className={s(style, { tablesContainer: true })}>
+            <GroupingColumnEditorTable
+              title={translate('Columns')}
+              columns={columns}
+              onAdd={onAddColumn}
+              onDelete={onDeleteColumn}
+              onColumnChange={onColumnChange}
+            />
+            <GroupingColumnEditorTable
+              title={translate('Functions')}
+              columns={functions}
+              onAdd={onAddFunction}
+              onDelete={onDeleteFunction}
+              onColumnChange={onFunctionChange}
+            />
+          </div>
+        </Group>
       </CommonDialogBody>
       <CommonDialogFooter>
         <div className={s(style, { footerContainer: true })}>
