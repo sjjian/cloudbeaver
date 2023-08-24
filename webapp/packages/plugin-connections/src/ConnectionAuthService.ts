@@ -17,6 +17,7 @@ import { Dependency, injectable } from '@cloudbeaver/core-di';
 import { CommonDialogService, DialogueStateResult } from '@cloudbeaver/core-dialogs';
 import { NotificationService } from '@cloudbeaver/core-events';
 import type { IExecutionContextProvider } from '@cloudbeaver/core-executor';
+import { NetworkStateService } from '@cloudbeaver/core-root';
 import { AuthenticationService } from '@cloudbeaver/plugin-authentication';
 
 import { DatabaseAuthDialog } from './DatabaseAuthDialog/DatabaseAuthDialog';
@@ -30,6 +31,7 @@ export class ConnectionAuthService extends Dependency {
     private readonly connectionsManagerService: ConnectionsManagerService,
     private readonly notificationService: NotificationService,
     private readonly authenticationService: AuthenticationService,
+    private readonly networkStateService: NetworkStateService,
   ) {
     super();
 
@@ -44,12 +46,12 @@ export class ConnectionAuthService extends Dependency {
     const connection = context.getContext(this.connectionsManagerService.connectionContext);
 
     try {
-      const tempConnection = await this.auth(connectionKey);
+      const newConnection = await this.auth(connectionKey);
 
-      if (!tempConnection?.connected) {
+      if (!newConnection?.connected) {
         return;
       }
-      connection.connection = tempConnection;
+      connection.connection = newConnection;
     } catch (exception: any) {
       this.notificationService.logException(exception);
       throw exception;
@@ -57,6 +59,10 @@ export class ConnectionAuthService extends Dependency {
   }
 
   async auth(key: IConnectionInfoParams, resetCredentials?: boolean): Promise<Connection | null> {
+    if (!this.networkStateService.state) {
+      throw new Error("Can't establish new connection in offline mode.");
+    }
+
     if (!this.connectionInfoResource.has(key)) {
       return null;
     }
@@ -76,7 +82,6 @@ export class ConnectionAuthService extends Dependency {
 
     if (connection.requiredAuth) {
       const state = await this.authProviderService.requireProvider(connection.requiredAuth);
-
       if (!state) {
         return connection;
       }
