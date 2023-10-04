@@ -32,4 +32,6 @@ export default [
   ],
   ['sql_editor_upload_script_max_size_title', 'File size exceeds max size'],
   ['sql_editor_close_result_tabs_dialog_title', 'Confirm closing tabs'],
+  
+  ['sql_editor_audit_button_tooltip', "SQL Audit"]
 ];

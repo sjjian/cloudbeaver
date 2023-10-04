@@ -31,6 +31,8 @@ import { KEY_BINDING_SQL_EDITOR_SHOW_EXECUTION_PLAN } from './actions/bindings/K
 import { KEY_BINDING_SQL_EDITOR_SHOW_OUTPUT } from './actions/bindings/KEY_BINDING_SQL_EDITOR_SHOW_OUTPUT';
 import { ESqlDataSourceFeatures } from './SqlDataSource/ESqlDataSourceFeatures';
 import { DATA_CONTEXT_SQL_EDITOR_DATA } from './SqlEditor/DATA_CONTEXT_SQL_EDITOR_DATA';
+import { ACTION_SQL_EDITOR_AUDIT } from './actions/ACTION_SQL_EDITOR_AUDIT';
+import { KEY_BINDING_SQL_EDITOR_AUDIT } from './actions/bindings/KEY_BINDING_SQL_EDITOR_AUDIT'
 
 @injectable()
 export class MenuBootstrap extends Bootstrap {
@@ -140,6 +142,13 @@ export class MenuBootstrap extends Bootstrap {
       handler: this.sqlEditorActionHandler.bind(this),
     });
 
+    this.keyBindingService.addKeyBindingHandler({
+      id: 'sql-editor-audit',
+      binding: KEY_BINDING_SQL_EDITOR_AUDIT,
+      isBindingApplicable: (contexts, action) => action === ACTION_SQL_EDITOR_AUDIT,
+      handler: this.sqlEditorActionHandler.bind(this),
+    });
+
     // this.menuService.addCreator({
     //   isApplicable: context => (
     //     context.tryGet(DATA_CONTEXT_SQL_EDITOR_DATA) !== undefined
@@ -184,6 +193,8 @@ export class MenuBootstrap extends Bootstrap {
         break;
       case ACTION_SQL_EDITOR_SHOW_EXECUTION_PLAN:
         data.showExecutionPlan();
+        break;
+      case ACTION_SQL_EDITOR_AUDIT:
         break;
     }
   }
