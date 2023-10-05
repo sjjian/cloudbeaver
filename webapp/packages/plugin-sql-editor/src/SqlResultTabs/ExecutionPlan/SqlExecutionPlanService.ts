@@ -30,11 +30,29 @@ type AuditTask = {
   audit_level: string;
 };
 
+type AuditTaskDesc = {
+  audit_level: string;
+  exec_sql: string;
+  audit_result: AuditResult[];
+}
+
+type AuditResult = {
+  level: string;
+  message: string;
+  rule_name: string;
+}
+
 type AuditTaskRes = {
   code: number;
   data: AuditTask;
   message: string;
 };
+
+type AuditTaskDescRes = {
+  code: number;
+  data: AuditTaskDesc[];
+  message: string;
+}
 
 async function getUsers() {
 
@@ -78,6 +96,13 @@ export class SqlExecutionPlanService {
       return
     }
 
+    var task: AuditTask = {
+      task_id: 0,
+      pass_rate: 0,
+      score: 0,
+      audit_level: "",
+    };
+
     try {
       const { data, status } = await axios.post<AuditTaskRes>(
         "/v1/projects/" + "default" + "/tasks/audits",
@@ -89,6 +114,8 @@ export class SqlExecutionPlanService {
           },
         },
       );
+
+      task = data.data
   
       console.log(JSON.stringify(data, null, 4));
   
@@ -108,6 +135,37 @@ export class SqlExecutionPlanService {
       }
     }
 
+    try {
+      const { data, status } = await axios.get<AuditTaskDescRes>(
+        "/v2/tasks/audits/"+ task.task_id + "/sqls?page_index=1&page_size=100",
+        {
+          headers: {
+            'Accept': 'application/json',
+          },
+        }
+      );
+
+      console.log(JSON.stringify(data, null, 4));
+
+      if (status != 200 || data.code != 0) {
+        console.error('audit failed, status=' + status + ", message: " + data.message);
+        return 
+      }
+
+    }catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.log('error message: ', error.message);
+        // return error.message;
+      } else {
+        console.log('unexpected error: ', error);
+        // return 'An unexpected error occurred';
+      }
+    }
+
+    const tabId = this.createAuditTab(editorState, query);
+    editorState.currentTabId = tabId;
+
+    
     console.log(dataSource)
     
     console.log("audit: name[" + connection.name + "] sql["+ query +"], schema["+contextInfo.defaultCatalog+"]")
@@ -229,6 +287,63 @@ export class SqlExecutionPlanService {
     state.tabs.push({
       id,
       name: `Execution plan - ${nameOrder}`,
+      icon: 'execution-plan-tab',
+      order,
+    });
+
+    return id;
+  }
+
+
+  private removeAuditTab(state: ISqlEditorTabState, tabId: string) {
+    const tab = state.tabs.find(tab => tab.id === tabId);
+    if (tab) {
+      state.tabs.splice(state.tabs.indexOf(tab), 1);
+    }
+    this.removeAuditTab2(state, tabId);
+
+    if (state.tabs.length > 0) {
+      state.currentTabId = state.tabs[0].id;
+    } else {
+      state.currentTabId = '';
+    }
+  }
+
+  removeAuditTab2(state: ISqlEditorTabState, tabId: string): void {
+    const auditTab = state.auditTabs.find(auditTab => auditTab.tabId === tabId);
+
+    if (auditTab) {
+      state.auditTabs.splice(state.auditTabs.indexOf(auditTab), 1);
+    }
+
+    const data = this.data.get(tabId);
+
+    if (data) {
+      data.task.cancel();
+    }
+
+    this.data.delete(tabId);
+  }
+
+  private createAuditTab(state: ISqlEditorTabState, query: string) {
+    const dataSource = this.sqlDataSourceService.get(state.editorId);
+    if (!dataSource) {
+      throw new Error('SQL Data Source is not provided');
+    }
+
+    const id = uuid();
+    const order = Math.max(0, ...state.tabs.map(tab => tab.order + 1));
+    const nameOrder = Math.max(1, ...state.auditTabs.map(tab => tab.order + 1));
+
+    state.auditTabs.push({
+      tabId: id,
+      order: nameOrder,
+      query,
+    });
+
+    state.tabs.push({
+      id,
+      name: `Audit - ${nameOrder}`,
       icon: 'execution-plan-tab',
       order,
     });

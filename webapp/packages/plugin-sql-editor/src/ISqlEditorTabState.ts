@@ -42,6 +42,14 @@ export interface IExecutionPlanTab {
   options?: Record<string, any>;
 }
 
+export interface IAuditTab {
+  tabId: string;
+  order: number;
+  query: string;
+  options?: Record<string, any>;
+}
+
+
 export interface IOutputLogsTab extends ISqlEditorResultTab {
   selectedLogTypes: IOutputLogType[];
 }
@@ -59,6 +67,7 @@ export interface ISqlEditorTabState {
   resultTabs: IResultTab[];
   statisticsTabs: IStatisticsTab[];
   executionPlanTabs: IExecutionPlanTab[];
+  auditTabs: IAuditTab[];
   outputLogsTab?: IOutputLogsTab;
 
   // mode

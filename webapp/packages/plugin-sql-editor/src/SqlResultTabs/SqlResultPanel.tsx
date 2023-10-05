@@ -10,6 +10,7 @@ import styled, { css } from 'reshadow';
 
 import type { ISqlEditorTabState } from '../ISqlEditorTabState';
 import { SqlExecutionPlanPanel } from './ExecutionPlan/SqlExecutionPlanPanel';
+import { SqlAuditPanel } from './ExecutionPlan/SqlAuditPanel';
 import { OutputLogsPanel } from './OutputLogs/OutputLogsPanel';
 import { SqlResultSetPanel } from './SqlResultSetPanel';
 import { SqlScriptStatisticsPanel } from './SqlScriptStatisticsPanel';
@@ -36,6 +37,16 @@ export const SqlResultPanel = observer<Props>(function SqlResultPanel({ state, i
     return styled(style)(
       <result-panel>
         <SqlResultSetPanel resultTab={resultTab} group={group} />
+      </result-panel>,
+    );
+  }
+
+  const auditTab = state.auditTabs.find(tab => tab.tabId === id);
+
+  if (auditTab) {
+    return styled(style)(
+      <result-panel>
+        <SqlAuditPanel auditTab={auditTab} />
       </result-panel>,
     );
   }

@@ -71,6 +71,7 @@ export class SqlEditorService {
       resultGroups: observable([]),
       resultTabs: observable([]),
       executionPlanTabs: observable([]),
+      auditTabs: observable([]),
       statisticsTabs: observable([]),
       outputLogsTab: undefined,
       currentModeId: undefined,
