@@ -6,8 +6,9 @@
  * you may not use this file except in compliance with the License.
  */
 import { makeObservable, observable } from 'mobx';
+import axios from 'axios';
 
-import { ConnectionExecutionContextService } from '@cloudbeaver/core-connections';
+import { ConnectionExecutionContextService, ConnectionInfoResource, createConnectionParam } from '@cloudbeaver/core-connections';
 import { injectable } from '@cloudbeaver/core-di';
 import { NotificationService } from '@cloudbeaver/core-events';
 import type { ITask } from '@cloudbeaver/core-executor';
@@ -22,6 +23,23 @@ interface IExecutionPlanData {
   executionPlan: SqlExecutionPlan | null;
 }
 
+type AuditTask = {
+  task_id: number;
+  pass_rate: number;
+  score: number;
+  audit_level: string;
+};
+
+type AuditTaskRes = {
+  code: number;
+  data: AuditTask;
+  message: string;
+};
+
+async function getUsers() {
+
+}
+
 @injectable()
 export class SqlExecutionPlanService {
   data: Map<string, IExecutionPlanData>;
@@ -32,12 +50,67 @@ export class SqlExecutionPlanService {
     private readonly asyncTaskInfoService: AsyncTaskInfoService,
     private readonly connectionExecutionContextService: ConnectionExecutionContextService,
     private readonly sqlDataSourceService: SqlDataSourceService,
+    private readonly connectionInfoResource: ConnectionInfoResource,
   ) {
     this.data = new Map();
 
     makeObservable(this, {
       data: observable,
     });
+  }
+
+  async audit(editorState: ISqlEditorTabState, query: string): Promise<void> {
+    console.log(editorState)
+    console.log(query)
+    const dataSource = this.sqlDataSourceService.get(editorState.editorId);
+    const contextInfo = dataSource?.executionContext;
+
+
+    const executionContext = contextInfo && this.connectionExecutionContextService.get(contextInfo.id);
+    if (!contextInfo || !executionContext) {
+      console.error('audit executionContext is not provided');
+      return;
+    }
+
+    const connection = this.connectionInfoResource.get(createConnectionParam(contextInfo.projectId, contextInfo.connectionId));
+    if (!connection) {
+      console.error('audit connection is not provided');
+      return
+    }
+
+    try {
+      const { data, status } = await axios.post<AuditTaskRes>(
+        "/v1/projects/" + "default" + "/tasks/audits",
+        { instance_name: 'test', instance_schema: 'sqle', sql: query},
+        {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
+  
+      console.log(JSON.stringify(data, null, 4));
+  
+      if (status != 200 || data.code != 0) {
+        console.error('audit failed, status=' + status + ", message: " + data.message);
+        return 
+      }
+  
+      // return data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.log('error message: ', error.message);
+        // return error.message;
+      } else {
+        console.log('unexpected error: ', error);
+        // return 'An unexpected error occurred';
+      }
+    }
+
+    console.log(dataSource)
+    
+    console.log("audit: name[" + connection.name + "] sql["+ query +"], schema["+contextInfo.defaultCatalog+"]")
   }
 
   async executeExecutionPlan(editorState: ISqlEditorTabState, query: string): Promise<void> {

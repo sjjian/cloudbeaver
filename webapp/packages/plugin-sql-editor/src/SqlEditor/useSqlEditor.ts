@@ -61,6 +61,7 @@ interface ISQLEditorDataPrivate extends ISQLEditorData {
 const MAX_HINTS_LIMIT = 200;
 
 export function useSqlEditor(state: ISqlEditorTabState): ISQLEditorData {
+  console.log("useSqlEditor")
   const connectionExecutionContextService = useService(ConnectionExecutionContextService);
   const sqlQueryService = useService(SqlQueryService);
   const sqlDialectInfoService = useService(SqlDialectInfoService);
@@ -301,6 +302,23 @@ export function useSqlEditor(state: ISqlEditorTabState): ISQLEditorData {
         } catch {}
       },
 
+      async audit(): Promise<void> {
+        const isQuery = this.dataSource?.hasFeature(ESqlDataSourceFeatures.query);
+        const isExecutable = this.dataSource?.hasFeature(ESqlDataSourceFeatures.executable);
+
+        if (!isQuery || !isExecutable || !this.dialect?.supportsExplainExecutionPlan) {
+          return;
+        }
+
+        const query = this.getSubQuery();
+
+        try {
+          await this.executeQueryAction(await this.executeQueryAction(query, () => this.getResolvedSegment()), query =>
+            this.sqlExecutionPlanService.audit(this.state, query.query),
+          );
+        } catch {}
+      },
+
       async switchEditing(): Promise<void> {
         this.dataSource?.setEditing(!this.dataSource.isEditing());
       },
@@ -470,6 +488,7 @@ export function useSqlEditor(state: ISqlEditorTabState): ISQLEditorData {
       executeQuery: action.bound,
       executeQueryNewTab: action.bound,
       showExecutionPlan: action.bound,
+      audit: action.bound,
       executeScript: action.bound,
       switchEditing: action.bound,
       dialect: computed,

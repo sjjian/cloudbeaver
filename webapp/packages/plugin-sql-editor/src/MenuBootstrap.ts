@@ -83,6 +83,7 @@ export class MenuBootstrap extends Bootstrap {
           ACTION_REDO,
           ACTION_UNDO,
           ACTION_SQL_EDITOR_SHOW_EXECUTION_PLAN,
+          ACTION_SQL_EDITOR_AUDIT,
           ACTION_SQL_EDITOR_SHOW_OUTPUT,
         ].includes(action);
       },
@@ -195,6 +196,7 @@ export class MenuBootstrap extends Bootstrap {
         data.showExecutionPlan();
         break;
       case ACTION_SQL_EDITOR_AUDIT:
+        data.audit();
         break;
     }
   }
