@@ -46,7 +46,6 @@ export interface IAuditTab {
   tabId: string;
   order: number;
   query: string;
-  options?: Record<string, any>;
 }
 
 

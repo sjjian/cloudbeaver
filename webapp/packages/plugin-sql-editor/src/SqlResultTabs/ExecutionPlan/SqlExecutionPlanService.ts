@@ -16,7 +16,6 @@ import { AsyncTaskInfoService, GraphQLService, SqlExecutionPlan } from '@cloudbe
 import { uuid } from '@cloudbeaver/core-utils';
 
 import type { ISqlEditorTabState } from '../../ISqlEditorTabState';
-import { SqlDataSourceService } from '../../SqlDataSource/SqlDataSourceService';
 
 interface IExecutionPlanData {
   task: ITask<SqlExecutionPlan>;
@@ -31,6 +30,7 @@ type AuditTask = {
 };
 
 type AuditTaskDesc = {
+  number: number;
   audit_level: string;
   exec_sql: string;
   audit_result: AuditResult[];
@@ -54,13 +54,16 @@ type AuditTaskDescRes = {
   message: string;
 }
 
-async function getUsers() {
-
+export type AuditTaskResult = {
+  taskInfo: AuditTask | null
+  taskDesc: AuditTaskDesc[] | null
 }
+
 
 @injectable()
 export class SqlExecutionPlanService {
   data: Map<string, IExecutionPlanData>;
+  auditData: Map<string, AuditTaskResult>;
 
   constructor(
     private readonly graphQLService: GraphQLService,
@@ -71,18 +74,17 @@ export class SqlExecutionPlanService {
     private readonly connectionInfoResource: ConnectionInfoResource,
   ) {
     this.data = new Map();
+    this.auditData = new Map();
 
     makeObservable(this, {
       data: observable,
+      auditData: observable,
     });
   }
 
   async audit(editorState: ISqlEditorTabState, query: string): Promise<void> {
-    console.log(editorState)
-    console.log(query)
     const dataSource = this.sqlDataSourceService.get(editorState.editorId);
     const contextInfo = dataSource?.executionContext;
-
 
     const executionContext = contextInfo && this.connectionExecutionContextService.get(contextInfo.id);
     if (!contextInfo || !executionContext) {
@@ -96,11 +98,9 @@ export class SqlExecutionPlanService {
       return
     }
 
-    var task: AuditTask = {
-      task_id: 0,
-      pass_rate: 0,
-      score: 0,
-      audit_level: "",
+    var task: AuditTaskResult = {
+      taskInfo: null,
+      taskDesc: null,
     };
 
     try {
@@ -115,7 +115,7 @@ export class SqlExecutionPlanService {
         },
       );
 
-      task = data.data
+      task.taskInfo = data.data
   
       console.log(JSON.stringify(data, null, 4));
   
@@ -124,8 +124,8 @@ export class SqlExecutionPlanService {
         return 
       }
   
-      // return data;
     } catch (error) {
+
       if (axios.isAxiosError(error)) {
         console.log('error message: ', error.message);
         // return error.message;
@@ -137,7 +137,7 @@ export class SqlExecutionPlanService {
 
     try {
       const { data, status } = await axios.get<AuditTaskDescRes>(
-        "/v2/tasks/audits/"+ task.task_id + "/sqls?page_index=1&page_size=100",
+        "/v2/tasks/audits/"+ task.taskInfo?.task_id + "/sqls?page_index=1&page_size=100",
         {
           headers: {
             'Accept': 'application/json',
@@ -151,8 +151,9 @@ export class SqlExecutionPlanService {
         console.error('audit failed, status=' + status + ", message: " + data.message);
         return 
       }
+      task.taskDesc = data.data
 
-    }catch (error) {
+    } catch (error) {
       if (axios.isAxiosError(error)) {
         console.log('error message: ', error.message);
         // return error.message;
@@ -165,7 +166,8 @@ export class SqlExecutionPlanService {
     const tabId = this.createAuditTab(editorState, query);
     editorState.currentTabId = tabId;
 
-    
+    this.auditData.set(tabId, task);
+
     console.log(dataSource)
     
     console.log("audit: name[" + connection.name + "] sql["+ query +"], schema["+contextInfo.defaultCatalog+"]")
@@ -295,19 +297,19 @@ export class SqlExecutionPlanService {
   }
 
 
-  private removeAuditTab(state: ISqlEditorTabState, tabId: string) {
-    const tab = state.tabs.find(tab => tab.id === tabId);
-    if (tab) {
-      state.tabs.splice(state.tabs.indexOf(tab), 1);
-    }
-    this.removeAuditTab2(state, tabId);
+  // private removeAuditTab(state: ISqlEditorTabState, tabId: string) {
+  //   const tab = state.tabs.find(tab => tab.id === tabId);
+  //   if (tab) {
+  //     state.tabs.splice(state.tabs.indexOf(tab), 1);
+  //   }
+  //   this.removeAuditTab2(state, tabId);
 
-    if (state.tabs.length > 0) {
-      state.currentTabId = state.tabs[0].id;
-    } else {
-      state.currentTabId = '';
-    }
-  }
+  //   if (state.tabs.length > 0) {
+  //     state.currentTabId = state.tabs[0].id;
+  //   } else {
+  //     state.currentTabId = '';
+  //   }
+  // }
 
   removeAuditTab2(state: ISqlEditorTabState, tabId: string): void {
     const auditTab = state.auditTabs.find(auditTab => auditTab.tabId === tabId);
@@ -316,13 +318,7 @@ export class SqlExecutionPlanService {
       state.auditTabs.splice(state.auditTabs.indexOf(auditTab), 1);
     }
 
-    const data = this.data.get(tabId);
-
-    if (data) {
-      data.task.cancel();
-    }
-
-    this.data.delete(tabId);
+    this.auditData.delete(tabId);
   }
 
   private createAuditTab(state: ISqlEditorTabState, query: string) {

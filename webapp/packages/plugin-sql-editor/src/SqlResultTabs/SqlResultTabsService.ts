@@ -80,6 +80,7 @@ export class SqlResultTabsService {
     this.sqlQueryResultService.removeResultTab(state, tab.id);
     this.sqlExecutionPlanService.removeExecutionPlanTab(state, tab.id);
     this.sqlOutputLogsService.removeOutputLogsTab(state, tab.id);
+    this.sqlExecutionPlanService.removeAuditTab2(state, tab.id);
 
     if (state.currentTabId === tab.id) {
       if (state.tabs.length > 0) {

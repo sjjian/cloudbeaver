@@ -61,7 +61,6 @@ interface ISQLEditorDataPrivate extends ISQLEditorData {
 const MAX_HINTS_LIMIT = 200;
 
 export function useSqlEditor(state: ISqlEditorTabState): ISQLEditorData {
-  console.log("useSqlEditor")
   const connectionExecutionContextService = useService(ConnectionExecutionContextService);
   const sqlQueryService = useService(SqlQueryService);
   const sqlDialectInfoService = useService(SqlDialectInfoService);
