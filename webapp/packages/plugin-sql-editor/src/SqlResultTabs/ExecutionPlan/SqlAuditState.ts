@@ -20,7 +20,7 @@ export interface SqlAuditContext {
   selectedNodes: Map<number, boolean>;
   // readonly columns: ObjectPropertyInfo[];
   // readonly nodes: IExecutionPlanNode[];
-  selectNode: (nodeId: string) => void;
+  selectNode: (nodeId: number) => void;
 }
 
 export const ExecutionPlanTreeContext = createContext<SqlAuditContext | null>(null);
@@ -75,11 +75,8 @@ export function useSqlAuditState(taskResult: AuditTaskResult, onNodeSelect: (nod
     }),
     {
       selectedNodes: observable,
-      nodeList: observable.ref,
-      columns: computed,
-      nodes: computed,
     },
-    { nodeList, onNodeSelect },
+    { taskResult, onNodeSelect },
     ['selectNode'],
   );
 }

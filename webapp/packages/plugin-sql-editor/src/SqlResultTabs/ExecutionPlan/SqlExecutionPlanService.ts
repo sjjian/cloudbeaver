@@ -16,6 +16,7 @@ import { AsyncTaskInfoService, GraphQLService, SqlExecutionPlan } from '@cloudbe
 import { uuid } from '@cloudbeaver/core-utils';
 
 import type { ISqlEditorTabState } from '../../ISqlEditorTabState';
+import { SqlDataSourceService } from '../../SqlDataSource/SqlDataSourceService';
 
 interface IExecutionPlanData {
   task: ITask<SqlExecutionPlan>;
