@@ -1,6 +1,9 @@
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 import styled, { css } from 'reshadow';
+import {
+  ExportOutlined,
+} from '@ant-design/icons';
 
 import { 
   Loader, 
@@ -23,11 +26,9 @@ import { useService } from '@cloudbeaver/core-di';
 import type { IAuditTab, IExecutionPlanTab } from '../../ISqlEditorTabState';
 import { SqlExecutionPlanService } from './SqlExecutionPlanService';
 import { useSqlAuditState } from './SqlAuditState'
+import { SqlAuditLevel } from './SqlAuditLevel'
 
 const styles = css`
-  Pane {
-    composes: theme-background-surface theme-text-on-surface from global;
-  }
   Pane:first-child {
     overflow: hidden;
   }
@@ -86,15 +87,15 @@ export const SqlAuditPanel = observer<Props>(function SqlAuditPanel({ auditTab }
           <Table selectedItems={state.selectedNodes} onSelect={state.selectNode}>
             <TableHeader fixed>
               <TableColumnHeader>序号</TableColumnHeader>
+              <TableColumnHeader>审核等级</TableColumnHeader>
               <TableColumnHeader>SQL</TableColumnHeader>
-              <TableColumnHeader>告警等级</TableColumnHeader>
             </TableHeader>
             <TableBody>
               {data.taskDesc.map(node => (
                 <TableItem item={node.number} selectOnItem>
-                  <TableColumnValue>{node.number}</TableColumnValue>
+                  <TableColumnValue align = "center">{node.number}</TableColumnValue>
+                  <TableColumnValue align = "center"><SqlAuditLevel level = {node.audit_level}/></TableColumnValue>
                   <TableColumnValue>{node.exec_sql}</TableColumnValue>
-                  <TableColumnValue>{node.audit_level || "-"}</TableColumnValue>
                 </TableItem>
               ))}
             </TableBody>
@@ -109,14 +110,16 @@ export const SqlAuditPanel = observer<Props>(function SqlAuditPanel({ auditTab }
       <Pane basis="30%" main>
         <Table>
           <TableHeader fixed>
-            <TableColumnHeader>规则</TableColumnHeader>
             <TableColumnHeader>等级</TableColumnHeader>
+            <TableColumnHeader>规则</TableColumnHeader>
+            <TableColumnHeader>知识库</TableColumnHeader>
           </TableHeader>
           <TableBody>
             {taskDesc && taskDesc.audit_result && taskDesc.audit_result.map(node => (
               <TableItem item="auditDesc" selectOnItem>
+                <TableColumnValue align = "center"><SqlAuditLevel level = {node.level}/></TableColumnValue>
                 <TableColumnValue>{node.message}</TableColumnValue>
-                <TableColumnValue>{node.level}</TableColumnValue>
+                <TableColumnValue onClick= {window.open("/rule/knowledge/"+ node.rule_name + "?db_type="+ data.instance_db_type)}><ExportOutlined/></TableColumnValue>
               </TableItem>
             ))}
           </TableBody>

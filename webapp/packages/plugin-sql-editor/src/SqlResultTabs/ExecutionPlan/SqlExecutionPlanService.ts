@@ -25,6 +25,7 @@ interface IExecutionPlanData {
 
 type AuditTask = {
   task_id: number;
+  instance_db_type: string;
   pass_rate: number;
   score: number;
   audit_level: string;
@@ -105,9 +106,14 @@ export class SqlExecutionPlanService {
     };
 
     try {
+      const split = connection.name.split(":", 2)
+      if (split.length <= 1) {
+        return
+      }
+
       const { data, status } = await axios.post<AuditTaskRes>(
-        "/v1/projects/" + "default" + "/tasks/audits",
-        { instance_name: 'test', instance_schema: 'sqle', sql: query},
+        "/v1/projects/" + split[0] + "/tasks/audits",
+        { instance_name: split[1].trim(), instance_schema: contextInfo.defaultCatalog, sql: query},
         {
           headers: {
             'Accept': 'application/json',
