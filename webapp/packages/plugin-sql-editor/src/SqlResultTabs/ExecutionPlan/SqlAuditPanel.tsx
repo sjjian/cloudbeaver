@@ -59,7 +59,7 @@ export const SqlAuditPanel = observer<Props>(function SqlAuditPanel({ auditTab }
 
   // )
 
-  if (!data || !data.taskDesc || !data.taskDesc.length) {
+  if (!data || !data.taskInfo || !data.taskDesc || !data.taskDesc.length) {
     return styled(
       styles,
       splitStyles,
@@ -117,9 +117,9 @@ export const SqlAuditPanel = observer<Props>(function SqlAuditPanel({ auditTab }
           <TableBody>
             {taskDesc && taskDesc.audit_result && taskDesc.audit_result.map(node => (
               <TableItem item="auditDesc" selectOnItem>
-                <TableColumnValue align = "center"><SqlAuditLevel level = {node.level}/></TableColumnValue>
+                <TableColumnValue align = "center" ><SqlAuditLevel level = {node.level}/></TableColumnValue>
                 <TableColumnValue>{node.message}</TableColumnValue>
-                <TableColumnValue onClick= {window.open("/rule/knowledge/"+ node.rule_name + "?db_type="+ data.instance_db_type)}><ExportOutlined/></TableColumnValue>
+                { node.rule_name && <TableColumnValue onClick={ () =>(window.open("/rule/knowledge/"+ node.rule_name + "?db_type="+ data.taskInfo?.instance_db_type))} ><ExportOutlined/></TableColumnValue> }
               </TableItem>
             ))}
           </TableBody>
@@ -128,3 +128,4 @@ export const SqlAuditPanel = observer<Props>(function SqlAuditPanel({ auditTab }
     </Split>,
   );
 });
+// onClick= {}
