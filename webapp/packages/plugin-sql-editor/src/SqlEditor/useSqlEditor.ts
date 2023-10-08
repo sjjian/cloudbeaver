@@ -25,6 +25,7 @@ import { SqlDialectInfoService } from '../SqlDialectInfoService';
 import { SqlEditorService } from '../SqlEditorService';
 import { ISQLScriptSegment, SQLParser } from '../SQLParser';
 import { SqlExecutionPlanService } from '../SqlResultTabs/ExecutionPlan/SqlExecutionPlanService';
+import { SqlAuditService } from '../SqlResultTabs/SqlAudit/SqlAuditService';
 import { OUTPUT_LOGS_TAB_ID } from '../SqlResultTabs/OutputLogs/OUTPUT_LOGS_TAB_ID';
 import { OutputLogsService } from '../SqlResultTabs/OutputLogs/OutputLogsService';
 import { SqlQueryService } from '../SqlResultTabs/SqlQueryService';
@@ -39,6 +40,7 @@ interface ISQLEditorDataPrivate extends ISQLEditorData {
   readonly sqlEditorService: SqlEditorService;
   readonly notificationService: NotificationService;
   readonly sqlExecutionPlanService: SqlExecutionPlanService;
+  readonly sqlAuditService: SqlAuditService;
   readonly commonDialogService: CommonDialogService;
   readonly sqlResultTabsService: SqlResultTabsService;
   readonly dataSource: ISqlDataSource | undefined;
@@ -67,6 +69,7 @@ export function useSqlEditor(state: ISqlEditorTabState): ISQLEditorData {
   const sqlEditorService = useService(SqlEditorService);
   const notificationService = useService(NotificationService);
   const sqlExecutionPlanService = useService(SqlExecutionPlanService);
+  const sqlAuditService = useService(SqlAuditService);
   const sqlResultTabsService = useService(SqlResultTabsService);
   const commonDialogService = useService(CommonDialogService);
   const sqlDataSourceService = useService(SqlDataSourceService);
@@ -301,6 +304,23 @@ export function useSqlEditor(state: ISqlEditorTabState): ISQLEditorData {
         } catch {}
       },
 
+      async audit(): Promise<void> {
+        const isQuery = this.dataSource?.hasFeature(ESqlDataSourceFeatures.query);
+        const isExecutable = this.dataSource?.hasFeature(ESqlDataSourceFeatures.executable);
+
+        if (!isQuery || !isExecutable) {
+          return;
+        }
+
+        const query = this.getSubQuery();
+
+        try {
+          await this.executeQueryAction(await this.executeQueryAction(query, () => this.getResolvedSegment()), query =>
+            this.sqlAuditService.audit(this.state, query.query),
+          );
+        } catch {}
+      },
+
       async switchEditing(): Promise<void> {
         this.dataSource?.setEditing(!this.dataSource.isEditing());
       },
@@ -470,6 +490,7 @@ export function useSqlEditor(state: ISqlEditorTabState): ISQLEditorData {
       executeQuery: action.bound,
       executeQueryNewTab: action.bound,
       showExecutionPlan: action.bound,
+      audit: action.bound,
       executeScript: action.bound,
       switchEditing: action.bound,
       dialect: computed,
@@ -489,6 +510,7 @@ export function useSqlEditor(state: ISqlEditorTabState): ISQLEditorData {
       sqlDialectInfoService,
       sqlEditorService,
       sqlExecutionPlanService,
+      sqlAuditService,
       sqlResultTabsService,
       notificationService,
       commonDialogService,

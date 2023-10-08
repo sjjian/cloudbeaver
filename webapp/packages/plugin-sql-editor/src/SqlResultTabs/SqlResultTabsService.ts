@@ -11,6 +11,7 @@ import { injectable } from '@cloudbeaver/core-di';
 
 import type { ISqlEditorResultTab, ISqlEditorTabState } from '../ISqlEditorTabState';
 import { SqlExecutionPlanService } from './ExecutionPlan/SqlExecutionPlanService';
+import { SqlAuditService } from './SqlAudit/SqlAuditService';
 import { OutputLogsService } from './OutputLogs/OutputLogsService';
 import { SqlQueryResultService } from './SqlQueryResultService';
 import { SqlQueryService } from './SqlQueryService';
@@ -21,6 +22,7 @@ export class SqlResultTabsService {
     private readonly sqlQueryService: SqlQueryService,
     private readonly sqlQueryResultService: SqlQueryResultService,
     private readonly sqlExecutionPlanService: SqlExecutionPlanService,
+    private readonly sqlAuditService: SqlAuditService,
     private readonly sqlOutputLogsService: OutputLogsService,
   ) {
     makeObservable(this, {
@@ -79,6 +81,7 @@ export class SqlResultTabsService {
     this.sqlQueryService.removeStatisticsTab(state, tab.id);
     this.sqlQueryResultService.removeResultTab(state, tab.id);
     this.sqlExecutionPlanService.removeExecutionPlanTab(state, tab.id);
+    this.sqlAuditService.removeAuditTab(state, tab.id);
     this.sqlOutputLogsService.removeOutputLogsTab(state, tab.id);
 
     if (state.currentTabId === tab.id) {

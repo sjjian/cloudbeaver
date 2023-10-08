@@ -281,6 +281,7 @@ export class SqlEditorTabService extends Bootstrap {
       !Array.isArray(tab.handlerState.modeState) ||
       !Array.isArray(tab.handlerState.tabs) ||
       !Array.isArray(tab.handlerState.executionPlanTabs) ||
+      !Array.isArray(tab.handlerState.auditTabs) ||
       !Array.isArray(tab.handlerState.resultGroups) ||
       !Array.isArray(tab.handlerState.resultTabs) ||
       !Array.isArray(tab.handlerState.statisticsTabs)
@@ -308,6 +309,7 @@ export class SqlEditorTabService extends Bootstrap {
     tab.handlerState.resultGroups = observable([]);
     tab.handlerState.resultTabs = observable([]);
     tab.handlerState.executionPlanTabs = observable([]);
+    tab.handlerState.auditTabs = observable([]);
     tab.handlerState.statisticsTabs = observable([]);
     tab.handlerState.outputLogsTab = undefined;
 

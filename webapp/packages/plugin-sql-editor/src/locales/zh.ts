@@ -24,6 +24,7 @@ export default [
   ['sql_execution_plan_properties_panel_value', '值'],
   ['sql_execution_plan_properties_panel_general', '一般'],
   ['sql_execution_plan_properties_panel_details', '详情'],
+  ['sql_editor_audit_button_tooltip', "SQL 审核"],
   ['sql_editor_upload_script_tooltip', '上传SQL脚本'],
   ['sql_editor_download_script_tooltip', '下载SQL脚本'],
   ['sql_editor_upload_script_unsaved_changes_dialog_message', '您当前的脚本将被上传的脚本覆盖。要先保存吗？'],
